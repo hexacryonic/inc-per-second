@@ -272,6 +272,7 @@ function sonicBoom() {
     gameData.sonicBooms += 1
     gameData.v = nominal.v
     gameData.vPC = nominal.vPC
+    gameData.vPCB = nominal.vPCB
     gameData.vPC$ = nominal.vPC$
     gameData.vPS = nominal.vPS
 
