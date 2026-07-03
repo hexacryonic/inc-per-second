@@ -4,31 +4,81 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>INC/s</title>
+    <style>
+        button:disabled {
+            opacity: 0.95;
+            cursor: not-allowed;
+        }
+        .income {
+            display: inline-block;
+            margin-left: 8px;
+            color: #000000;
+            font-size: 0.95rem;
+        }
+        .prop-row {
+            margin-bottom: 10px;
+        }
+    </style>
 </head>
 <body>
      <p id="speed">Your ball is rolling at a speed of 0 m/s.</p>
     <button onclick="nudgeBall()" id="nudgeLvl">Nudge (Power: 0.001)</button>
     <button onclick="buyNudgeBoost()" id="perClickUpgrade">Strengthen Nudge: 0.01 m/s</button>
     <button onclick="buyNudgePower()" id="nudgePower" style="display:none">X10 Nudge strength: 8 SP</button>
+    <span id="nudgePowerLabel" style="display:none">Nudge power maxed out.</span>
     <p id="toMach1">You are 0% of the way to Mach 1!</p>
     <button onclick="sonicBoom()" id="boomSP" style="display:none">Sonic Boom for +0 SP</button>
     <p id="heldSP" style="display:none">You have 0 SP. Use it to double the power of your propellants!</p>
     <p>======</p>
     <p>Propellants:</p>
-    <button onclick="buyP1()" id="p1">Portable Fan: 0.1 m/s, gives 0.03 m/s^2</button>
-    <button onclick="buyP1Power()" id="p1Power" style="display:none">Add another fan blade: 1 SP</button> <span>It ain't much, but it's a start.</span>
+    <div class="prop-row">
+        <button onclick="buyP1()" id="p1">Portable Fan: 0.1 m/s</button>
+        <span id="p1Income" class="income">(Gives +0.03 m/s per second)</span>
+        <button onclick="buyP1Power()" id="p1Power" style="display:none">Add another fan blade: 1 SP</button>
+    </div>
+    <span>It ain't much, but it's a start.</span>
     <p id="p1Total">0 portable fan(s) contributing 0 m/s per second.</p>
-    <button onclick="buyP2()" id="p2" style="display:none">RC Car: 2 m/s, gives 0.4 m/s^2</button> <button onclick="buyP2Power()" id="p2Power" style="display:none">Apply more voltage: 2 SP</button> <span id="p2Text" style="display:none">Of course, let's just hook this ball up to something with an actual motor!</span>
+    <div class="prop-row" style="display:none" id="p2Row">
+        <button onclick="buyP2()" id="p2">RC Car: 2 m/s</button>
+        <span id="p2Income" class="income">(Gives +0.4 m/s per second)</span>
+        <button onclick="buyP2Power()" id="p2Power" style="display:none">Apply more voltage: 2 SP</button>
+    </div>
+    <span id="p2Text" style="display:none">Of course, let's just hook this ball up to something with an actual motor!</span>
     <p id="p2Total" style="display:none">0 RC car(s) contributing 0 m/s per second.</p>
-    <button onclick="buyP3()" id="p3" style="display:none">Angry Chihuahua: 15 m/s, gives 1 m/s^2</button> <button onclick="buyP3Power()" id="p3Power" style="display:none">Make chihuahuas angrier: 4 SP</button> <span id="p3Text" style="display:none">The pissed off neighborhood stray dog is an excellent source of power, surely.</span>
+    <div class="prop-row" style="display:none" id="p3Row">
+        <button onclick="buyP3()" id="p3">Angry Chihuahua: 15 m/s</button>
+        <span id="p3Income" class="income">(Gives +1 m/s per second)</span>
+        <button onclick="buyP3Power()" id="p3Power" style="display:none">Make chihuahuas angrier: 4 SP</button>
+    </div>
+    <span id="p3Text" style="display:none">The pissed off neighborhood stray dog is an excellent source of power, surely.</span>
     <p id="p3Total" style="display:none">0 angry chihuahua(s) contributing 0 m/s per second.</p>
-    <button onclick="buyP4()" id="p4" style="display:none">Pickup Truck: 140 m/s, gives 8 m/s^2</button> <button onclick="buyP4Power()" id="p4Power" style="display:none">Decrease fuel prices: 16 SP</button> <span id="p4Text" style="display:none">Throw it in the back of a pickup truck like a real redneck.</span>
+    <div class="prop-row" style="display:none" id="p4Row">
+        <button onclick="buyP4()" id="p4">Pickup Truck: 140 m/s</button>
+        <span id="p4Income" class="income">(Gives +8 m/s per second)</span>
+        <button onclick="buyP4Power()" id="p4Power" style="display:none">Decrease fuel prices: 16 SP</button>
+    </div>
+    <span id="p4Text" style="display:none">Throw it in the back of a pickup truck like a real redneck.</span>
     <p id="p4Total" style="display:none">0 pickup truck(s) contributing 0 m/s per second.</p>
-    <button onclick="buyP5()" id="p5" style="display:none">Trebuchet: 970 m/s, gives 25 m/s^2</button> <button onclick="buyP5Power()" id="p5Power" style="display:none">Add more counterweights: 64 SP</button> <span id="p5Text" style="display:none">Hurl your balls with the superior siege weapon!</span>
+    <div class="prop-row" style="display:none" id="p5Row">
+        <button onclick="buyP5()" id="p5">Trebuchet: 970 m/s</button>
+        <span id="p5Income" class="income">(Gives +25 m/s per second)</span>
+        <button onclick="buyP5Power()" id="p5Power" style="display:none">Add more counterweights: 64 SP</button>
+    </div>
+    <span id="p5Text" style="display:none">Hurl your balls with the superior siege weapon!</span>
     <p id="p5Total" style="display:none">0 trebuchet(s) contributing 0 m/s per second.</p>
-    <button onclick="buyP6()" id="p6" style="display:none">Jet Engine: 8200 m/s, gives 160 m/s^2</button> <button onclick="buyP6Power()" id="p6Power" style="display:none">Make jet engine louder: 256 SP</button> <span id="p6Text" style="display:none">Add a REAL engine and feel the acceleration!</span>
+    <div class="prop-row" style="display:none" id="p6Row">
+        <button onclick="buyP6()" id="p6">Jet Engine: 8200 m/s</button>
+        <span id="p6Income" class="income">(Gives +160 m/s per second)</span>
+        <button onclick="buyP6Power()" id="p6Power" style="display:none">Make jet engine louder: 256 SP</button>
+    </div>
+    <span id="p6Text" style="display:none">Add a REAL engine and feel the acceleration!</span>
     <p id="p6Total" style="display:none">0 jet engine(s) contributing 0 m/s per second.</p>
-    <button onclick="buyP7()" id="p7" style="display:none">Antimatter Drive: 100000 m/s, gives 3100 m/s^2</button> <button onclick="buyP7Power()" id="p7Power" style="display:none">Supply more positrons: 1,024 SP</button> <span id="p7Text" style="display:none">This might be overkill. Then again, you never know!</span>
+    <div class="prop-row" style="display:none" id="p7Row">
+        <button onclick="buyP7()" id="p7">Antimatter Drive: 100000 m/s</button>
+        <span id="p7Income" class="income">(Gives +1000 m/s per second)</span>
+        <button onclick="buyP7Power()" id="p7Power" style="display:none">Supply more positrons: 1,024 SP</button>
+    </div>
+    <span id="p7Text" style="display:none">This might be overkill. Then again, you never know!</span>
     <p id="p7Total" style="display:none">0 antimatter drive(s) contributing 0 m/s per second.</p>
     <p>======</p>
     <p id="toGoal">You are 0% of the way to lightspeed!</p>
