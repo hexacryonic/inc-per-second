@@ -15,40 +15,27 @@ var gameData = {
   vPC$: 0.01,
   nudgePow$: 8,
   nudgePowCount: 0,
-  p1: 0,
-  p2: 0,
-  p3: 0,
-  p4: 0,
-  p5: 0,
+  tickspeedX: 1,
+
+  p1: 0, p1$: 0.1, p1Pow: 0.03, p1Pow$: 1,
+  p2: 0, p2$: 2, p2Pow: 0.4, p2Pow$: 2,
+  p3: 0, p3$: 15, p3Pow: 1, p3Pow$: 3,
+  p4: 0, p4$: 140, p4Pow: 8, p4Pow$: 4,
+  p5: 0, p5$: 970, p5Pow: 25, p5Pow$: 5,
+  p6: 0, p6$: 8200, p6Pow: 160, p6Pow$: 36,
+  p7: 0, p7$: 74000, p7Pow: 950, p7Pow$: 140,
+  p8: 0, p8$: 1000000, p8Pow: 25000, p8Pow$: 9000,
+  p9: 0, p9$: 77777777, p9Pow: 1000000, p9Pow$: 77777,
+
   p2Unlocked: false,
   p3Unlocked: false,
   p4Unlocked: false,
   p5Unlocked: false,
   p6Unlocked: false,
   p7Unlocked: false,
-  p1$: 0.1,
-  p2$: 2,
-  p3$: 15,
-  p4$: 140,
-  p5$: 970,
-  p1Pow: 0.03,
-  p2Pow: 0.4,
-  p3Pow: 1,
-  p4Pow: 8,
-  p5Pow: 25,
-  p1Pow$: 1,
-  p2Pow$: 2,
-  p3Pow$: 3,
-  p4Pow$: 4,
-  p5Pow$: 5,
-  p6: 0,
-  p7: 0,
-  p6$: 8200,
-  p7$: 100000,
-  p6Pow: 160,
-  p7Pow: 1000,
-  p6Pow$: 12,
-  p7Pow$: 21,
+  p8Unlocked: false,
+  p9Unlocked: false,
+
   SP: 0,
   sonicBooms: 0,
   vPS: 0, // passive speed gain per second from upgrades
@@ -59,20 +46,8 @@ var nominal = {
   vPC: 0.001,
   vPCB: 0.001,
   vPC$: 0.01,
-  p1: 0,
-  p2: 0,
-  p3: 0,
-  p4: 0,
-  p5: 0,
-  p6: 0,
-  p7: 0,
-  p1$: 0.1,
-  p2$: 2,
-  p3$: 15,
-  p4$: 140,
-  p5$: 970,
-  p6$: 8200,
-  p7$: 100000,
+  p1: 0, p2: 0, p3: 0, p4: 0, p5: 0, p6: 0, p7: 0, p8: 0, p9: 0,
+  p1$: 0.1, p2$: 2, p3$: 15, p4$: 140, p5$: 970, p6$: 8200, p7$: 74000, p8$: 1000000, p9$: 77777777,
   SP: 0,
   vPS: 0,
 }
@@ -82,10 +57,21 @@ const goalSpeed = 299792458 // speed of light in meters per second
 const goalName = "lightspeed"
 const powerUpgradeMult = 2
 
+function getGenerationMultiplier() {
+  const s = gameData.v / goalSpeed
+  if (s <= 0.3) return 1
+  const minMult = 0.001
+  if (s >= 1) return minMult
+  const t = (s - 0.3) / 0.7
+  const steepness = 4.5
+  return Math.pow(1 - t, steepness) * (1 - minMult) + minMult
+}
+
 upd() // initial UI update
 
 function nudgeBall() {
-  gameData.v += gameData.vPC
+  const mult = getGenerationMultiplier()
+  gameData.v += gameData.vPC * mult
   upd()
 }
 
@@ -111,6 +97,36 @@ function buyNudgePower() {
   }
 }
 
+function getNudgeName(offset = 0) {
+  const names = ["Nudge", "Push", "Punch", "Kick", "Shove", "Haymaker", "Dropkick", "Flying Knee", "Football Tackle", "Falcon Punch"]
+  const prefixes = ["", "Super", "Ultra", "Hyper", "Mega", "Giga", "Supreme", "Insane", "Legendary", "Ultimate"]
+  const suffixes = ["", "X", "Deluxe", "Special Edition", "5: Now It's Personal", "of Death", "ft. Weird Al", "and Knuckles", "of the Gods", "Prime"]
+  const tier = gameData.nudgePowCount + 1 + offset
+  const index = tier - 1
+  const cycle = index % names.length
+  const wrap = Math.floor(index / names.length)
+  const baseName = names[cycle]
+  let result = baseName
+  if (wrap > 0) {
+    const prefix = prefixes[(wrap) % prefixes.length].trim()
+    if (prefix !== "") {
+      result = prefix + " " + result
+    }
+  }
+  if (tier > 100) {
+    const suffixBase = tier <= 1000 ? tier - 91 : tier - 1091
+    const suffixIndex = Math.floor(suffixBase / 100) % suffixes.length
+    const suffix = suffixes[suffixIndex].trim()
+    if (suffix !== "") {
+      result += " " + suffix
+    }
+  }
+  if (tier >= 1001) {
+    result += " " + Math.floor((tier - 1) / 1000) + "K"
+  }
+  return result
+}
+
 function updatePassivePower() {
   gameData.vPS =
     gameData.p1 * gameData.p1Pow +
@@ -119,7 +135,9 @@ function updatePassivePower() {
     gameData.p4 * gameData.p4Pow +
     gameData.p5 * gameData.p5Pow +
     gameData.p6 * gameData.p6Pow +
-    gameData.p7 * gameData.p7Pow
+    gameData.p7 * gameData.p7Pow +
+    gameData.p8 * gameData.p8Pow +
+    gameData.p9 * gameData.p9Pow
 }
 
 function getSonicBoomSP() {
@@ -210,7 +228,29 @@ function buyP7() {
   if (gameData.v >= gameData.p7$) {
     gameData.v -= gameData.p7$
     gameData.p7 += 1
+    gameData.p8Unlocked = true
     gameData.p7$ = scalePropPrice(gameData.p7$)
+    updatePassivePower()
+    upd()
+  }
+}
+
+function buyP8() {
+  if (gameData.v >= gameData.p8$) {
+    gameData.v -= gameData.p8$
+    gameData.p8 += 1
+    gameData.p9Unlocked = true
+    gameData.p8$ = scalePropPrice(gameData.p8$)
+    updatePassivePower()
+    upd()
+  }
+}
+
+function buyP9() {
+  if (gameData.v >= gameData.p9$) {
+    gameData.v -= gameData.p9$
+    gameData.p9 += 1
+    gameData.p9$ = scalePropPrice(gameData.p9$)
     updatePassivePower()
     upd()
   }
@@ -286,19 +326,41 @@ function buyP7Power() {
   }
 }
 
+function buyP8Power() {
+  if (gameData.SP >= gameData.p8Pow$) {
+    gameData.SP -= gameData.p8Pow$
+    gameData.p8Pow *= powerUpgradeMult
+    gameData.p8Pow$ = scaleUpgradePrice(gameData.p8Pow$)
+    updatePassivePower()
+    upd()
+  }
+}
+
+function buyP9Power() {
+  if (gameData.SP >= gameData.p9Pow$) {
+    gameData.SP -= gameData.p9Pow$
+    gameData.p9Pow *= powerUpgradeMult
+    gameData.p9Pow$ = scaleUpgradePrice(gameData.p9Pow$)
+    updatePassivePower()
+    upd()
+  }
+}
+
 
 function tick() {
-  gameData.v += gameData.vPS / 10
+  const mult = getGenerationMultiplier()
+  gameData.v += ((gameData.vPS * mult) / 100) * gameData.tickspeedX
   upd()
 }
 
-setInterval(tick, 100)
+setInterval(tick, 10)
 
 function sonicBoom() {
   if (gameData.v >= mach1Speed) {
     gameData.SP += getSonicBoomSP()
     gameData.sonicBooms += 1
     gameData.v = nominal.v
+    gameData.vPCB = nominal.vPCB
     gameData.vPC = nominal.vPCB * gameData.vPCX
     gameData.vPC$ = nominal.vPC$
     gameData.vPS = nominal.vPS
@@ -310,6 +372,8 @@ function sonicBoom() {
     gameData.p5 = nominal.p5
     gameData.p6 = nominal.p6
     gameData.p7 = nominal.p7
+    gameData.p8 = nominal.p8
+    gameData.p9 = nominal.p9
     gameData.p1$ = nominal.p1$
     gameData.p2$ = nominal.p2$
     gameData.p3$ = nominal.p3$
@@ -317,6 +381,8 @@ function sonicBoom() {
     gameData.p5$ = nominal.p5$
     gameData.p6$ = nominal.p6$
     gameData.p7$ = nominal.p7$
+    gameData.p8$ = nominal.p8$
+    gameData.p9$ = nominal.p9$
 
     updatePassivePower()
     upd()
@@ -336,23 +402,35 @@ function setButtonDisabled(id, disabled) {
 }
 
 function upd() {
-    document.getElementById("perClickUpgrade").innerHTML = "Strengthen Nudge: " + format(gameData.vPC$) + " m/s"
-    document.getElementById("nudgePower").innerHTML = "X10 Nudge strength: " + formatW(gameData.nudgePow$) + " SP"
-    document.getElementById("nudgeLvl").innerHTML = "Nudge (Power: " + format(gameData.vPC) + ")"
-    document.getElementById("toGoal").innerHTML = "You are " + format2((gameData.v / goalSpeed) * 100) + "% of the way to " + goalName + "!"
+    const nudgeName = getNudgeName()
+    document.getElementById("perClickUpgrade").innerHTML = "Strengthen " + nudgeName + ": " + format(gameData.vPC$) + " m/s"
+    document.getElementById("nudgePower").innerHTML = "Learn to " + getNudgeName(1) + " for X10 total strength: " + formatW(gameData.nudgePow$) + " SP"
+    document.getElementById("nudgeLvl").innerHTML = nudgeName + " (Power: " + format(gameData.vPC) + ")"
     const mach1Progress = (gameData.v / mach1Speed) * 100
     if (mach1Progress < 100) {
         document.getElementById("toMach1").innerHTML = "You are " + format2(mach1Progress) + "% of the way to Mach 1!"
     } else {
-        document.getElementById("toMach1").innerHTML = "Mach 1 reached! Perform a Sonic Boom to earn SP."
+        document.getElementById("toMach1").innerHTML = "You are " + format2((gameData.v / goalSpeed) * 100) + "% of the way to " + goalName + "!"
     }
     const machRatio = gameData.v / mach1Speed
     document.getElementById("speed").innerHTML = "Your ball is rolling at a speed of " + format(gameData.v) + " m/s" + (machRatio >= 1 ? " (Mach " + format3(machRatio) + ")" : "") + "."
     document.getElementById("boomSP").innerHTML = "Sonic Boom for +" + getSonicBoomSP() + " SP"
     document.getElementById("heldSP").innerHTML = "You have " + formatW(gameData.SP) + " SP. Use it to double the power of your propellants!"
+    const genMult = getGenerationMultiplier()
+    const genMultFixed = genMult.toFixed(3)
+    const genEl = document.getElementById("genMult")
+    if (genEl) {
+      if (genMult < 1) {
+        genEl.style.display = ""
+        genEl.innerHTML = "Relativity (Speed past 0.3c) divides production: 1 / " + genMultFixed
+      } else {
+        genEl.style.display = "none"
+      }
+    }
     const showBoomButton = gameData.v >= mach1Speed
     const showSPInfo = gameData.sonicBooms > 0
     setVisible("boomSP", showBoomButton)
+    setVisible("boomText", showBoomButton)
     setVisible("heldSP", showSPInfo)
     setButtonDisabled("perClickUpgrade", gameData.v < gameData.vPC$)
     setButtonDisabled("nudgePower", gameData.SP < gameData.nudgePow$ || gameData.nudgePowCount >= 3)
@@ -370,6 +448,10 @@ function upd() {
     setButtonDisabled("p5Power", gameData.SP < gameData.p5Pow$)
     setButtonDisabled("p6Power", gameData.SP < gameData.p6Pow$)
     setButtonDisabled("p7Power", gameData.SP < gameData.p7Pow$)
+    setButtonDisabled("p8", gameData.v < gameData.p8$)
+    setButtonDisabled("p9", gameData.v < gameData.p9$)
+    setButtonDisabled("p8Power", gameData.SP < gameData.p8Pow$)
+    setButtonDisabled("p9Power", gameData.SP < gameData.p9Pow$)
     document.getElementById("p1Total").innerHTML = formatW(gameData.p1) + " portable fan(s) contributing " + format(gameData.p1 * gameData.p1Pow) + " m/s per second."
     document.getElementById("p2Total").innerHTML = formatW(gameData.p2) + " RC car(s) contributing " + format(gameData.p2 * gameData.p2Pow) + " m/s per second."
     document.getElementById("p3Total").innerHTML = formatW(gameData.p3) + " angry chihuahua(s) contributing " + format(gameData.p3 * gameData.p3Pow) + " m/s per second."
@@ -398,10 +480,21 @@ function upd() {
     document.getElementById("p7").innerHTML = "Antimatter Drive: " + format(gameData.p7$) + " m/s"
     document.getElementById("p7Income").innerHTML = "(Gives +" + format(gameData.p7Pow) + " m/s per second)"
     document.getElementById("p7Power").innerHTML = "Supply more positrons: " + formatW(gameData.p7Pow$) + " SP"
+    document.getElementById("p8Total").innerHTML = formatW(gameData.p8) + " gravity assist(s) contributing " + format(gameData.p8 * gameData.p8Pow) + " m/s per second."
+    document.getElementById("p8").innerHTML = "Gravity Assist: " + format(gameData.p8$) + " m/s"
+    document.getElementById("p8Income").innerHTML = "(Gives +" + format(gameData.p8Pow) + " m/s per second)"
+    document.getElementById("p8Power").innerHTML = "Redefine law of energy conservation: " + formatW(gameData.p8Pow$) + " SP"
+    document.getElementById("p9Total").innerHTML = formatW(gameData.p9) + " divine wind(s) contributing " + format(gameData.p9 * gameData.p9Pow) + " m/s per second."
+    document.getElementById("p9").innerHTML = "Divine Wind: " + format(gameData.p9$) + " m/s"
+    document.getElementById("p9Income").innerHTML = "(Gives +" + format(gameData.p9Pow) + " m/s per second)"
+    document.getElementById("p9Power").innerHTML = "Recite holy scriptures: " + formatW(gameData.p9Pow$) + " SP"
 
     const showSPUpgrades = gameData.sonicBooms > 0
     setVisible("nudgePower", showSPUpgrades && gameData.nudgePowCount < 3)
     setVisible("nudgePowerLabel", showSPUpgrades && gameData.nudgePowCount >= 3)
+    if (gameData.nudgePowCount >= 3) {
+        document.getElementById("nudgePowerLabel").innerHTML = "You do not yet know anything better than a " + getNudgeName()
+    }
     setVisible("p1Power", showSPUpgrades)
     setVisible("p2Row", gameData.p2Unlocked)
     setVisible("p2", gameData.p2Unlocked)
@@ -433,6 +526,16 @@ function upd() {
     setVisible("p7Total", gameData.p7Unlocked)
     setVisible("p7Power", gameData.p7Unlocked && showSPUpgrades)
     setVisible("p7Text", gameData.p7Unlocked)
+    setVisible("p8Row", gameData.p8Unlocked)
+    setVisible("p8", gameData.p8Unlocked)
+    setVisible("p8Total", gameData.p8Unlocked)
+    setVisible("p8Power", gameData.p8Unlocked && showSPUpgrades)
+    setVisible("p8Text", gameData.p8Unlocked)
+    setVisible("p9Row", gameData.p9Unlocked)
+    setVisible("p9", gameData.p9Unlocked)
+    setVisible("p9Total", gameData.p9Unlocked)
+    setVisible("p9Power", gameData.p9Unlocked && showSPUpgrades)
+    setVisible("p9Text", gameData.p9Unlocked)
 }
 
 //ugly formatting functions to make numbers look nice in the UI fdshafkj;dsafghbkjwl;as

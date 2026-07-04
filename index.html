@@ -24,11 +24,15 @@
      <p id="speed">Your ball is rolling at a speed of 0 m/s.</p>
     <button onclick="nudgeBall()" id="nudgeLvl">Nudge (Power: 0.001)</button>
     <button onclick="buyNudgeBoost()" id="perClickUpgrade">Strengthen Nudge: 0.01 m/s</button>
+    <br>
     <button onclick="buyNudgePower()" id="nudgePower" style="display:none">X10 Nudge strength: 8 SP</button>
-    <span id="nudgePowerLabel" style="display:none">Nudge power maxed out.</span>
-    <p id="toMach1">You are 0% of the way to Mach 1!</p>
-    <button onclick="sonicBoom()" id="boomSP" style="display:none">Sonic Boom for +0 SP</button>
+    <span id="nudgePowerLabel" style="display:none">You do not yet know anything better than a Nudge.</span>
+    <br>
+    <p id="genMult" style="display:none">Relativity (Speed past 0.4c) divides production: 1 / 1.000</p>
+    <br>
+    <button onclick="sonicBoom()" id="boomSP" style="display:none">Sonic Boom for +0 SP</button> <span id="boomText"style="display:none">Mach 1 reached! Perform a Sonic Boom to reset in exchange for SP!</span>
     <p id="heldSP" style="display:none">You have 0 SP. Use it to double the power of your propellants!</p>
+    <p id="toMach1">You are 0% of the way to Mach 1!</p>
     <p>======</p>
     <p>Propellants:</p>
     <div class="prop-row">
@@ -80,8 +84,20 @@
     </div>
     <span id="p7Text" style="display:none">This might be overkill. Then again, you never know!</span>
     <p id="p7Total" style="display:none">0 antimatter drive(s) contributing 0 m/s per second.</p>
-    <p>======</p>
-    <p id="toGoal">You are 0% of the way to lightspeed!</p>
+    <div class="prop-row" style="display:none" id="p8Row">
+        <button onclick="buyP8()" id="p8">Gravity Assist: 820000 m/s</button>
+        <span id="p8Income" class="income">(Gives +8000 m/s per second)</span>
+        <button onclick="buyP8Power()" id="p8Power" style="display:none">Redefine law of energy conservation: 256 SP</button>
+    </div>
+    <span id="p8Text" style="display:none">Use planetary gravity to slingshot the ball across the cosmos!</span>
+    <p id="p8Total" style="display:none">0 Gravity Assist(s) contributing 0 m/s per second.</p>
+    <div class="prop-row" style="display:none" id="p9Row">
+        <button onclick="buyP9()" id="p9">Divine Wind: 10000000 m/s</button>
+        <span id="p9Income" class="income">(Gives +50000 m/s per second)</span>
+        <button onclick="buyP9Power()" id="p9Power" style="display:none">Recite holy scriptures: 1,024 SP</button>
+    </div>
+    <span id="p9Text" style="display:none">Even the divine powers are curious how fast we can go!</span>
+    <p id="p9Total" style="display:none">0 Divine Wind(s) contributing 0 m/s per second.</p>
     <script src="main.js" charset="utf-8" type="text/javascript"></script>
 </body>
 </html>
