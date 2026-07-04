@@ -1,11 +1,7 @@
-var saveGameLoop = window.setInterval(function() {
-  localStorage.setItem("INCperSecondSave", JSON.stringify(gameData))
-}, 15000)
-
-var savegame = JSON.parse(localStorage.getItem("INCperSecondSave"))
-if (savegame !== null) {
-  gameData = savegame
-}
+const mach1Speed = 343 // Mach 1 (the speed of sound) in meters per second
+const goalSpeed = 299792458 // speed of light in meters per second
+const goalName = "lightspeed"
+const powerUpgradeMult = 2
 
 var gameData = {
   v: 0,
@@ -41,6 +37,31 @@ var gameData = {
   vPS: 0, // passive speed gain per second from upgrades
 }
 
+upd()
+
+function save() {
+  localStorage.setItem("INCperSecondSave", JSON.stringify(gameData))
+}
+
+setInterval(save, 10000)
+
+const saveData = JSON.parse(localStorage.getItem("INCperSecondSave"))
+
+function init() {
+  gameData = saveData
+}
+
+function nuke() {
+  localStorage.removeItem("INCperSecondSave")
+  document.getElementById("nuke").innerHTML = "Save nuked. Refresh page, or save to redeem yourself."
+  upd()
+}
+
+if (saveData !== null && saveData !== undefined) {
+  init()
+}
+upd()
+
 var nominal = {
   v: 0,
   vPC: 0.001,
@@ -52,11 +73,6 @@ var nominal = {
   vPS: 0,
 }
 
-const mach1Speed = 343 // Mach 1 (the speed of sound) in meters per second
-const goalSpeed = 299792458 // speed of light in meters per second
-const goalName = "lightspeed"
-const powerUpgradeMult = 2
-
 function getGenerationMultiplier() {
   const s = gameData.v / goalSpeed
   if (s <= 0.3) return 1
@@ -66,8 +82,6 @@ function getGenerationMultiplier() {
   const steepness = 4.5
   return Math.pow(1 - t, steepness) * (1 - minMult) + minMult
 }
-
-upd() // initial UI update
 
 function nudgeBall() {
   const mult = getGenerationMultiplier()
