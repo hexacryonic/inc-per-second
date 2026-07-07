@@ -4,107 +4,222 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>INC/s</title>
-    <style>
-        button:disabled {
-            opacity: 0.95;
-            cursor: not-allowed;
-        }
-        .income {
-            display: inline-block;
-            margin-left: 8px;
-            color: #000000;
-            font-size: 0.95rem;
-        }
-        .prop-row {
-            margin-bottom: 10px;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <button onclick="save()" id="save">Save</button>
-    <p id="speed">Your ball is rolling at a speed of 0 m/s.</p>
-    <button onclick="nudgeBall()" id="nudgeLvl">Nudge (Power: 0.001)</button>
-    <button onclick="buyNudgeBoost()" id="perClickUpgrade">Strengthen Nudge: 0.01 m/s</button>
-    <br>
-    <button onclick="buyNudgePower()" id="nudgePower" style="display:none">X10 Nudge strength: 8 SP</button>
-    <span id="nudgePowerLabel" style="display:none">You do not yet know anything better than a Nudge.</span>
-    <br>
-    <p id="genMult" style="display:none">Relativity (Speed past 0.4c) divides production: 1 / 1.000</p>
-    <br>
-    <button onclick="sonicBoom()" id="boomSP" style="display:none">Sonic Boom for +0 SP</button> <span id="boomText"style="display:none">Mach 1 reached! Perform a Sonic Boom to reset in exchange for SP!</span>
-    <p id="heldSP" style="display:none">You have 0 SP. Use it to double the power of your propellants!</p>
-    <p id="toMach1">You are 0% of the way to Mach 1!</p>
-    <p>======</p>
-    <p>Propellants:</p>
-    <div class="prop-row">
-        <button onclick="buyP1()" id="p1">Portable Fan: 0.1 m/s</button>
-        <span id="p1Income" class="income">(Gives +0.03 m/s per second)</span>
-        <button onclick="buyP1Power()" id="p1Power" style="display:none">Add another fan blade: 1 SP</button>
+    <div id="container">
+        <div id="sidebar">
+            <button onclick="switchTab('main')" class="tab" id="mainTab">Main</button>
+            <button onclick="switchTab('lightspeed')" class="tabL" id="lightspeedTab">Lightspeed</button>
+            <button onclick="switchTab('lightspeed')" class="tabB" id="bigbangTab">Big Bang</button>
+            <button onclick="switchTab('lightspeed')" class="tabW" id="4thwallTab">4th Wall</button>
+            <button onclick="switchTab('stats')" class="tab" id="statsTab">Stats</button>
+            <button onclick="switchTab('options')" class="tab" id="optionsTab">Options</button>
+            <button onclick="switchTab('credits')" class="tab" id="creditsTab">Credits</button>
+        </div>
+        <div id="main">
+            <div id="persistent">
+            </div>
+            <div id="lightspeed-reached" style="display:none" z-index="100">
+                <p style="font-size:2rem;">Your ball has reached the speed of light!!</p>
+                <p style="font-size:1.5rem;">Perform a Lightspeed reset in exchange for Photons!</p>
+                <br>
+                <button onclick="lightspeed()" id="lsPhotons">Lightspeed for +0 Photons</button>
+            </div>
+            <div id="main-tab">
+                <p id="speed" style="font-size:1.4rem;">Your ball is rolling at a speed of 0 m/s.</p>
+                <button onclick="nudgeBall()" id="nudgeLvl">Nudge (Power: 0.001)</button>
+                <button onclick="buyNudgeBoost()" id="perClickUpgrade">Strengthen Nudge: 0.01 m/s</button>
+                <br>
+                <button onclick="buyNudgePower()" id="nudgePower" style="display:none">X10 Nudge strength: 8 SP</button>
+                <span id="nudgePowerLabel" style="display:none">You do not yet know anything better than a Nudge.</span>
+                <br>
+                <p id="genMult" style="display:none">Relativity (Speed past 0.4c) divides production: 1 / 1.000</p>
+                <button onclick="sonicBoom()" id="boomSP" style="display:none; margin: 5px">Sonic Boom for +0 SP</button> <span id="boomText"style="display:none">Mach 1 reached! Perform a Sonic Boom to reset in exchange for SP!</span>
+                <p id="heldSP" style="display:none">You have 0 SP. Use it to double the power of your boosters!</p>
+                <p id="toMach1">You are 0% of the way to Mach 1!</p>
+                <p style="font-size:1.3rem; font-weight:bold; margin: 10px">Boosters:</p>
+                <div id=cardContainer>
+                    <div class="card-row">
+                        <div class="booster-card" id="p1Row">
+                            <p id="p1Name" style="font-size:1.3rem; font-weight:bold; margin: 2px">Portable Fan (0)</p>
+                            <p id="p1Total" style="font-size:0.8rem; margin: 7px">Total: 0 m/s per second.</p>
+                            <div style="display:flex">
+                                <div class="card-img">
+                                    <img src="img/booster/boost1.png" width="128" height="128" style="border:2px solid #000000"></img>
+                                </div>
+                                <div class="card-info">
+                                    <button onclick="buyP1()" id="p1">Buy for 0.1 m/s</button>
+                                    <p id="p1Income" class="income">Income: 0.03</p>
+                                    <button onclick="buyP1Power()" id="p1Power" style="display:none">Add another fan blade: 1 SP</button>
+                                </div>
+                            </div>
+                            <p style="font-size:0.85rem;">"It ain't much, but it's a start."</p>
+                        </div>
+                        <div class="booster-card" style="display:none" id="p2Row">
+                            <p id="p2Name" style="font-size:1.3rem; font-weight:bold; margin: 2px">RC Car (0)</p>
+                            <p id="p2Total" style="font-size:0.8rem; margin: 7px">Total: 0 m/s per second.</p>
+                            <div style="display:flex">
+                                <div class="card-img">
+                                    <img src="img/booster/boost2.png" width="128" height="128" style="border:2px solid #000000"></img>
+                                </div>
+                                <div class="card-info">
+                                    <button onclick="buyP2()" id="p2">Buy for 2 m/s</button>
+                                    <p id="p2Income" class="income">Income: 0.4</p>
+                                    <button onclick="buyP2Power()" id="p2Power" style="display:none">Increase motor voltage: 2 SP</button>
+                                </div>
+                            </div>
+                            <p style="font-size:0.85rem;">"Of course, let's just hook the ball up to something with an actual motor!"</p>
+                        </div>
+                        <div class="booster-card" style="display:none" id="p3Row">
+                            <p id="p3Name" style="font-size:1.3rem; font-weight:bold; margin: 2px">Angry Chihuahua (0)</p>
+                            <p id="p3Total" style="font-size:0.8rem; margin: 7px">Total: 0 m/s per second.</p>
+                            <div style="display:flex">
+                                <div class="card-img">
+                                    <img src="img/booster/boost3.png" width="128" height="128" style="border:2px solid #000000"></img>
+                                </div>
+                                <div class="card-info">
+                                    <button onclick="buyP3()" id="p3">Buy for 15 m/s</button>
+                                    <p id="p3Income" class="income">Income: 1</p>
+                                    <button onclick="buyP3Power()" id="p3Power" style="display:none">Make chihuahuas angrier: 3 SP</button>
+                                </div>
+                            </div>
+                            <p style="font-size:0.85rem;">"The pissed off neighborhood stray dog is an excellent source of power, surely."</p>
+                        </div>
+                    </div>
+                    <div class="card-row">
+                        <div class="booster-card" id="p4Row">
+                            <p id="p4Name" style="font-size:1.3rem; font-weight:bold; margin: 2px">Pickup Truck (0)</p>
+                            <p id="p4Total" style="font-size:0.8rem; margin: 7px">Total: 0 m/s per second.</p>
+                            <div style="display:flex">
+                                <div class="card-img">
+                                    <img src="img/booster/boost4.png" width="128" height="128" style="border:2px solid #000000"></img>
+                                </div>
+                                <div class="card-info">
+                                    <button onclick="buyP4()" id="p4">Buy for 140 m/s</button>
+                                    <p id="p4Income" class="income">Income: 8</p>
+                                    <button onclick="buyP4Power()" id="p4Power" style="display:none">Reduce fuel prices: 4 SP</button>
+                                </div>
+                            </div>
+                            <p style="font-size:0.85rem;">"Throw it in the back of a pickup truck like a real redneck."</p>
+                        </div>
+                        <div class="booster-card" style="display:none" id="p5Row">
+                            <p id="p5Name" style="font-size:1.3rem; font-weight:bold; margin: 2px">Trebuchet (0)</p>
+                            <p id="p5Total" style="font-size:0.8rem; margin: 7px">Total: 0 m/s per second.</p>
+                            <div style="display:flex">
+                                <div class="card-img">
+                                    <img src="img/booster/boost5.png" width="128" height="128" style="border:2px solid #000000"></img>
+                                </div>
+                                <div class="card-info">
+                                    <button onclick="buyP5()" id="p5">Buy for 970 m/s</button>
+                                    <p id="p5Income" class="income">Income: 25</p>
+                                    <button onclick="buyP5Power()" id="p5Power" style="display:none">Add more counterweights: 5 SP</button>
+                                </div>
+                            </div>
+                            <p style="font-size:0.85rem;">"Hurl your balls with the superior siege weapon!"</p>
+                        </div>
+                        <div class="booster-card" style="display:none" id="p6Row">
+                            <p id="p6Name" style="font-size:1.3rem; font-weight:bold; margin: 2px">Jet Engine (0)</p>
+                            <p id="p6Total" style="font-size:0.8rem; margin: 7px">Total: 0 m/s per second.</p>
+                            <div style="display:flex">
+                                <div class="card-img">
+                                    <img src="img/booster/boost6.png" width="128" height="128" style="border:2px solid #000000"></img>
+                                </div>
+                                <div class="card-info">
+                                    <button onclick="buyP6()" id="p6">Buy for 8,200 m/s</button>
+                                    <p id="p6Income" class="income">Income: 160</p>
+                                    <button onclick="buyP6Power()" id="p6Power" style="display:none">Make engines louder: 36 SP</button>
+                                </div>
+                            </div>
+                            <p style="font-size:0.85rem;">"Attach a REAL engine and feel the acceleration!"</p>
+                        </div>
+                    </div>
+                    <div class="card-row">
+                        <div class="booster-card" id="p7Row">
+                            <p id="p7Name" style="font-size:1.3rem; font-weight:bold; margin: 2px">Antimatter Drive (0)</p>
+                            <p id="p7Total" style="font-size:0.8rem; margin: 7px">Total: 0 m/s per second.</p>
+                            <div style="display:flex">
+                                <div class="card-img">
+                                    <img src="img/booster/boost7.png" width="128" height="128" style="border:2px solid #000000"></img>
+                                </div>
+                                <div class="card-info">
+                                    <button onclick="buyP7()" id="p7">Buy for 74000 m/s</button>
+                                    <p id="p7Income" class="income">Income: 950</p>
+                                    <button onclick="buyP7Power()" id="p7Power" style="display:none">Supply more positrons: 140 SP</button>
+                                </div>
+                            </div>
+                            <p style="font-size:0.85rem;">"This might be overkill. Then again, you never know!"</p>
+                        </div>
+                        <div class="booster-card" style="display:none" id="p8Row">
+                            <p id="p8Name" style="font-size:1.3rem; font-weight:bold; margin: 2px">Gravity Assist (0)</p>
+                            <p id="p8Total" style="font-size:0.8rem; margin: 7px">Total: 0 m/s per second.</p>
+                            <div style="display:flex">
+                                <div class="card-img">
+                                    <img src="img/booster/boost8.png" width="128" height="128" style="border:2px solid #000000"></img>
+                                </div>
+                                <div class="card-info">
+                                    <button onclick="buyP8()" id="p8">Buy for 1,000,000 m/s</button>
+                                    <p id="p8Income" class="income">Income: 25000</p>
+                                    <button onclick="buyP8Power()" id="p8Power" style="display:none">Redefine energy conservation: 9,000 SP</button>
+                                </div>
+                            </div>
+                            <p style="font-size:0.85rem;">"Slingshot your ball with the gravitational force of celestial bodies!"</p>
+                        </div>
+                        <div class="booster-card" style="display:none" id="p9Row">
+                            <p id="p9Name" style="font-size:1.3rem; font-weight:bold; margin: 2px">Divine Wind (0)</p>
+                            <p id="p9Total" style="font-size:0.8rem; margin: 7px">Total: 0 m/s per second.</p>
+                            <div style="display:flex">
+                                <div class="card-img">
+                                    <img src="img/booster/boost9.png" width="128" height="128" style="border:2px solid #000000"></img>
+                                </div>
+                                <div class="card-info">
+                                    <button onclick="buyP9()" id="p9">Buy for 77,777,777 m/s</button>
+                                    <p id="p9Income" class="income">Income: 1,000,000</p>
+                                    <button onclick="buyP9Power()" id="p9Power" style="display:none">Recite holy scriptures: 77,777 SP</button>
+                                </div>
+                            </div>
+                            <p style="font-size:0.85rem;">"Even the divine powers are curious how fast we can go!"</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="lightspeed-tab" style="display:none">
+                <div id="subtabContainer" class="lightspeed">
+                    <button onclick="switchSub()">Upgrade Tree</button>
+                    <button onclick="switchSub()">Super Boosters</button>
+                    <button onclick="switchSub()">Challenges</button>
+                </div>
+                <p id="heldPhotons" style="font-size:1.4rem;">You have 0 Photons.</p>
+                <div id="nodeContainer">
+
+                </div>
+            </div>
+            <div id="stats-tab" style="display:none">
+                <div id="subtabContainer">
+                    <button onclick="switchSub('statsgeneral')">General</button>
+                    <button onclick="switchSub('statsachievements')">Achievements</button>
+                    <button onclick="switchSub('statsrecords')">Records</button>
+                </div>
+                <div id="statsgeneral-subtab">
+                    <p>test</p>
+                </div>
+                <div id="statsachievements-subtab" style="display:none">
+                    <p id="heldCheevs" style="font-size:1.4rem; margin: 0px">You have completed 0 achievements.</p>
+                    <p id="cheevBuff" style="margin: 3px">They boost velocity gain by +1% per achievement. (Total: +0%)</p>
+                </div>
+                <div id="statsrecords-subtab" style="display:none">
+                    <p>test3</p>
+                </div>
+            </div>
+            <div id="options-tab" style="display:none">
+                <button onclick="save()">Save</button>
+                <button onclick="nuke()" id="nuke">NUKE SAVE</button>
+            </div>
+            <div id="credits-tab" style="display:none">
+                
+            </div>
+        </div>
     </div>
-    <span>It ain't much, but it's a start.</span>
-    <p id="p1Total">0 portable fan(s) contributing 0 m/s per second.</p>
-    <div class="prop-row" style="display:none" id="p2Row">
-        <button onclick="buyP2()" id="p2">RC Car: 2 m/s</button>
-        <span id="p2Income" class="income">(Gives +0.4 m/s per second)</span>
-        <button onclick="buyP2Power()" id="p2Power" style="display:none">Apply more voltage: 2 SP</button>
-    </div>
-    <span id="p2Text" style="display:none">Of course, let's just hook this ball up to something with an actual motor!</span>
-    <p id="p2Total" style="display:none">0 RC car(s) contributing 0 m/s per second.</p>
-    <div class="prop-row" style="display:none" id="p3Row">
-        <button onclick="buyP3()" id="p3">Angry Chihuahua: 15 m/s</button>
-        <span id="p3Income" class="income">(Gives +1 m/s per second)</span>
-        <button onclick="buyP3Power()" id="p3Power" style="display:none">Make chihuahuas angrier: 4 SP</button>
-    </div>
-    <span id="p3Text" style="display:none">The pissed off neighborhood stray dog is an excellent source of power, surely.</span>
-    <p id="p3Total" style="display:none">0 angry chihuahua(s) contributing 0 m/s per second.</p>
-    <div class="prop-row" style="display:none" id="p4Row">
-        <button onclick="buyP4()" id="p4">Pickup Truck: 140 m/s</button>
-        <span id="p4Income" class="income">(Gives +8 m/s per second)</span>
-        <button onclick="buyP4Power()" id="p4Power" style="display:none">Decrease fuel prices: 16 SP</button>
-    </div>
-    <span id="p4Text" style="display:none">Throw it in the back of a pickup truck like a real redneck.</span>
-    <p id="p4Total" style="display:none">0 pickup truck(s) contributing 0 m/s per second.</p>
-    <div class="prop-row" style="display:none" id="p5Row">
-        <button onclick="buyP5()" id="p5">Trebuchet: 970 m/s</button>
-        <span id="p5Income" class="income">(Gives +25 m/s per second)</span>
-        <button onclick="buyP5Power()" id="p5Power" style="display:none">Add more counterweights: 64 SP</button>
-    </div>
-    <span id="p5Text" style="display:none">Hurl your balls with the superior siege weapon!</span>
-    <p id="p5Total" style="display:none">0 trebuchet(s) contributing 0 m/s per second.</p>
-    <div class="prop-row" style="display:none" id="p6Row">
-        <button onclick="buyP6()" id="p6">Jet Engine: 8200 m/s</button>
-        <span id="p6Income" class="income">(Gives +160 m/s per second)</span>
-        <button onclick="buyP6Power()" id="p6Power" style="display:none">Make jet engine louder: 256 SP</button>
-    </div>
-    <span id="p6Text" style="display:none">Add a REAL engine and feel the acceleration!</span>
-    <p id="p6Total" style="display:none">0 jet engine(s) contributing 0 m/s per second.</p>
-    <div class="prop-row" style="display:none" id="p7Row">
-        <button onclick="buyP7()" id="p7">Antimatter Drive: 100000 m/s</button>
-        <span id="p7Income" class="income">(Gives +1000 m/s per second)</span>
-        <button onclick="buyP7Power()" id="p7Power" style="display:none">Supply more positrons: 1,024 SP</button>
-    </div>
-    <span id="p7Text" style="display:none">This might be overkill. Then again, you never know!</span>
-    <p id="p7Total" style="display:none">0 antimatter drive(s) contributing 0 m/s per second.</p>
-    <div class="prop-row" style="display:none" id="p8Row">
-        <button onclick="buyP8()" id="p8">Gravity Assist: 820000 m/s</button>
-        <span id="p8Income" class="income">(Gives +8000 m/s per second)</span>
-        <button onclick="buyP8Power()" id="p8Power" style="display:none">Redefine law of energy conservation: 256 SP</button>
-    </div>
-    <span id="p8Text" style="display:none">Use planetary gravity to slingshot the ball across the cosmos!</span>
-    <p id="p8Total" style="display:none">0 Gravity Assist(s) contributing 0 m/s per second.</p>
-    <div class="prop-row" style="display:none" id="p9Row">
-        <button onclick="buyP9()" id="p9">Divine Wind: 10000000 m/s</button>
-        <span id="p9Income" class="income">(Gives +50000 m/s per second)</span>
-        <button onclick="buyP9Power()" id="p9Power" style="display:none">Recite holy scriptures: 1,024 SP</button>
-    </div>
-    <span id="p9Text" style="display:none">Even the divine powers are curious how fast we can go!</span>
-    <p id="p9Total" style="display:none">0 Divine Wind(s) contributing 0 m/s per second.</p>
     <script src="main.js" charset="utf-8" type="text/javascript"></script>
-    <br>
-    <br>
-    <br>
-    <br>
-    <br>
-    <button onclick="nuke()" id="nuke">NUKE SAVE</button>
 </body>
 </html>

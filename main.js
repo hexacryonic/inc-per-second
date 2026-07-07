@@ -1,6 +1,6 @@
 const mach1Speed = 343 // Mach 1 (the speed of sound) in meters per second
-const goalSpeed = 299792458 // speed of light in meters per second
-const goalName = "lightspeed"
+const goalSpeed = 299792457.999999 // pretty much the speed of light in meters per second
+const goalName = "lightspeed (1c)"
 const powerUpgradeMult = 2
 
 var gameData = {
@@ -20,8 +20,8 @@ var gameData = {
   p5: 0, p5$: 970, p5Pow: 25, p5Pow$: 5,
   p6: 0, p6$: 8200, p6Pow: 160, p6Pow$: 36,
   p7: 0, p7$: 74000, p7Pow: 950, p7Pow$: 140,
-  p8: 0, p8$: 1000000, p8Pow: 25000, p8Pow$: 9000,
-  p9: 0, p9$: 77777777, p9Pow: 1000000, p9Pow$: 77777,
+  p8: 0, p8$: 1000000, p8Pow: 40000, p8Pow$: 9000,
+  p9: 0, p9$: 77777777, p9Pow: 1500000, p9Pow$: 77777,
 
   p2Unlocked: false,
   p3Unlocked: false,
@@ -35,9 +35,116 @@ var gameData = {
   SP: 0,
   sonicBooms: 0,
   vPS: 0, // passive speed gain per second from upgrades
+
+  photons: 0,
+  lightspeeds: 0,
+
+  lightnodes: [],
 }
 
+function getSonicBoomSP() {
+  if (gameData.v < mach1Speed) return 0
+  return Math.max(1, Math.floor(((gameData.v - mach1Speed) / mach1Speed)*1.8) + 1)
+}
+
+function getLSPhotons() {
+  if (gameData.v < goalSpeed) return 0
+  return Math.floor((gameData.v / goalSpeed)*10)
+}
+
+var threshold = 0.4
+
+function getGenerationMultiplier() {
+  const s = gameData.v / goalSpeed
+  if (s <= threshold) return 1
+  const minMult = 0.001
+  if (s >= 1) return minMult
+  const t = (s - threshold) / (1 - threshold)
+  const steepness = 4.2
+  return Math.pow(1 - t, steepness) * (1 - minMult) + minMult
+}
+
+var effectivevPC = gameData.vPC*getGenerationMultiplier()
+var p1EffectivePow = gameData.p1Pow*getGenerationMultiplier()
+var p2EffectivePow = gameData.p2Pow*getGenerationMultiplier()
+var p3EffectivePow = gameData.p3Pow*getGenerationMultiplier()
+var p4EffectivePow = gameData.p4Pow*getGenerationMultiplier()
+var p5EffectivePow = gameData.p5Pow*getGenerationMultiplier()
+var p6EffectivePow = gameData.p6Pow*getGenerationMultiplier()
+var p7EffectivePow = gameData.p7Pow*getGenerationMultiplier()
+var p8EffectivePow = gameData.p8Pow*getGenerationMultiplier()
+var p9EffectivePow = gameData.p9Pow*getGenerationMultiplier()
+
+function updatePassivePower() {
+  gameData.vPS =
+    gameData.p1 * p1EffectivePow +
+    gameData.p2 * p2EffectivePow +
+    gameData.p3 * p3EffectivePow +
+    gameData.p4 * p4EffectivePow +
+    gameData.p5 * p5EffectivePow +
+    gameData.p6 * p6EffectivePow +
+    gameData.p7 * p7EffectivePow +
+    gameData.p8 * p8EffectivePow +
+    gameData.p9 * p9EffectivePow
+}
+
+function setButtonDisabled(id, disabled) {
+  const btn = document.getElementById(id)
+  if (!btn) return
+  btn.disabled = disabled
+}
+
+function lightspeedCheck() {
+  if (gameData.v >= goalSpeed) {
+    gameData.v = goalSpeed
+    document.getElementById("lightspeed-reached").style.display = "block";
+    document.getElementById("main-tab").style.display = "none";
+    document.getElementById("options-tab").style.display = "none";
+    setButtonDisabled("mainTab", true)
+    setButtonDisabled("statsTab", true)
+    setButtonDisabled("optionsTab", true)
+    setButtonDisabled("creditsTab", true)
+  }
+}
+
+function tick() {
+  effectivevPC = gameData.vPC*getGenerationMultiplier()
+  p1EffectivePow = gameData.p1Pow*getGenerationMultiplier()
+  p2EffectivePow = gameData.p2Pow*getGenerationMultiplier()
+  p3EffectivePow = gameData.p3Pow*getGenerationMultiplier()
+  p4EffectivePow = gameData.p4Pow*getGenerationMultiplier()
+  p5EffectivePow = gameData.p5Pow*getGenerationMultiplier()
+  p6EffectivePow = gameData.p6Pow*getGenerationMultiplier()
+  p7EffectivePow = gameData.p7Pow*getGenerationMultiplier()
+  p8EffectivePow = gameData.p8Pow*getGenerationMultiplier()
+  p9EffectivePow = gameData.p9Pow*getGenerationMultiplier()
+  updatePassivePower()
+  gameData.v += (gameData.vPS / 24)
+  lightspeedCheck()
+  upd()
+}
+
+setInterval(tick, 60)
+
 upd()
+
+function switchTab(tab) {
+  document.getElementById("main-tab").style.display = "none";
+  document.getElementById("lightspeed-tab").style.display = "none";
+  document.getElementById("stats-tab").style.display = "none";
+  document.getElementById("options-tab").style.display = "none";
+  document.getElementById("credits-tab").style.display = "none";
+
+  document.getElementById(tab + "-tab").style.display = "block";
+}
+
+function switchSub(subtab) {
+  document.getElementById("statsgeneral-subtab").style.display = "none";
+  document.getElementById("statsachievements-subtab").style.display = "none";
+  document.getElementById("statsrecords-subtab").style.display = "none";
+
+  document.getElementById(subtab + "-subtab").style.display = "block";
+}
 
 function save() {
   localStorage.setItem("INCperSecondSave", JSON.stringify(gameData))
@@ -73,19 +180,130 @@ var nominal = {
   vPS: 0,
 }
 
-function getGenerationMultiplier() {
-  const s = gameData.v / goalSpeed
-  if (s <= 0.3) return 1
-  const minMult = 0.001
-  if (s >= 1) return minMult
-  const t = (s - 0.3) / 0.7
-  const steepness = 4.5
-  return Math.pow(1 - t, steepness) * (1 - minMult) + minMult
+function sonicBoom() {
+  if (gameData.v >= mach1Speed) {
+    gameData.SP += getSonicBoomSP()
+    gameData.sonicBooms += 1
+    gameData.v = nominal.v
+    gameData.vPCB = nominal.vPCB
+    gameData.vPC = nominal.vPCB * gameData.vPCX
+    gameData.vPC$ = nominal.vPC$
+    gameData.vPS = nominal.vPS
+
+    gameData.p1 = nominal.p1
+    gameData.p2 = nominal.p2
+    gameData.p3 = nominal.p3
+    gameData.p4 = nominal.p4
+    gameData.p5 = nominal.p5
+    gameData.p6 = nominal.p6
+    gameData.p7 = nominal.p7
+    gameData.p8 = nominal.p8
+    gameData.p9 = nominal.p9
+    gameData.p1$ = nominal.p1$
+    gameData.p2$ = nominal.p2$
+    gameData.p3$ = nominal.p3$
+    gameData.p4$ = nominal.p4$
+    gameData.p5$ = nominal.p5$
+    gameData.p6$ = nominal.p6$
+    gameData.p7$ = nominal.p7$
+    gameData.p8$ = nominal.p8$
+    gameData.p9$ = nominal.p9$
+
+    updatePassivePower()
+    upd()
+  }
+}
+
+var nominalL = {
+  v: 0,
+  vPC: 0.001,
+  vPCB: 0.001,
+  vPCX: 1,
+  vPC$: 0.01,
+  nudgePow$: 8,
+  nudgePowCount: 0,
+  p1: 0, p1$: 0.1, p1Pow: 0.03, p1Pow$: 1,
+  p2: 0, p2$: 2, p2Pow: 0.4, p2Pow$: 2,
+  p3: 0, p3$: 15, p3Pow: 1, p3Pow$: 3,
+  p4: 0, p4$: 140, p4Pow: 8, p4Pow$: 4,
+  p5: 0, p5$: 970, p5Pow: 25, p5Pow$: 5,
+  p6: 0, p6$: 8200, p6Pow: 160, p6Pow$: 36,
+  p7: 0, p7$: 74000, p7Pow: 950, p7Pow$: 140,
+  p8: 0, p8$: 1000000, p8Pow: 40000, p8Pow$: 9000,
+  p9: 0, p9$: 77777777, p9Pow: 1500000, p9Pow$: 77777,
+  SP: 0,
+  sonicBooms: 0,
+  vPS: 0,
+}
+
+function lightspeed() {
+  if (gameData.v >= goalSpeed) {
+    gameData.photons += getLSPhotons()
+    gameData.lightspeeds += 1
+    gameData.v = nominalL.v
+    gameData.vPCB = nominalL.vPCB
+    gameData.vPCX = nominalL.vPCX
+    gameData.vPC = nominalL.vPCB * nominalL.vPCX
+    gameData.vPC$ = nominalL.vPC$
+    gameData.vPS = nominalL.vPS
+    gameData.nudgePow$ = nominalL.nudgePow$
+    gameData.nudgePowCount = nominalL.nudgePowCount
+
+    gameData.p1 = nominalL.p1
+    gameData.p2 = nominalL.p2
+    gameData.p3 = nominalL.p3
+    gameData.p4 = nominalL.p4
+    gameData.p5 = nominalL.p5
+    gameData.p6 = nominalL.p6
+    gameData.p7 = nominalL.p7
+    gameData.p8 = nominalL.p8
+    gameData.p9 = nominalL.p9
+    gameData.p1$ = nominalL.p1$
+    gameData.p2$ = nominalL.p2$
+    gameData.p3$ = nominalL.p3$
+    gameData.p4$ = nominalL.p4$
+    gameData.p5$ = nominalL.p5$
+    gameData.p6$ = nominalL.p6$
+    gameData.p7$ = nominalL.p7$
+    gameData.p8$ = nominalL.p8$
+    gameData.p9$ = nominalL.p9$
+    gameData.p1Pow = nominalL.p1Pow
+    gameData.p2Pow = nominalL.p2Pow
+    gameData.p3Pow = nominalL.p3Pow
+    gameData.p4Pow = nominalL.p4Pow
+    gameData.p5Pow = nominalL.p5Pow
+    gameData.p6Pow = nominalL.p6Pow
+    gameData.p7Pow = nominalL.p7Pow
+    gameData.p8Pow = nominalL.p8Pow
+    gameData.p9Pow = nominalL.p9Pow
+    gameData.p1Pow$ = nominalL.p1Pow$
+    gameData.p2Pow$ = nominalL.p2Pow$
+    gameData.p3Pow$ = nominalL.p3Pow$
+    gameData.p4Pow$ = nominalL.p4Pow$
+    gameData.p5Pow$ = nominalL.p5Pow$
+    gameData.p6Pow$ = nominalL.p6Pow$
+    gameData.p7Pow$ = nominalL.p7Pow$
+    gameData.p8Pow$ = nominalL.p8Pow$
+    gameData.p9Pow$ = nominalL.p9Pow$
+
+    gameData.SP = nominalL.SP
+    gameData.sonicBooms = nominalL.sonicBooms
+
+    document.getElementById("lightspeed-reached").style.display = "none";
+    document.getElementById("main-tab").style.display = "block";
+    setButtonDisabled("mainTab", false)
+    setButtonDisabled("statsTab", false)
+    setButtonDisabled("optionsTab", false)
+    setButtonDisabled("creditsTab", false)
+
+    updatePassivePower()
+    lightspeedCheck()
+    upd()
+  }
 }
 
 function nudgeBall() {
-  const mult = getGenerationMultiplier()
-  gameData.v += gameData.vPC * mult
+  gameData.v += effectivevPC
   upd()
 }
 
@@ -139,24 +357,6 @@ function getNudgeName(offset = 0) {
     result += " " + Math.floor((tier - 1) / 1000) + "K"
   }
   return result
-}
-
-function updatePassivePower() {
-  gameData.vPS =
-    gameData.p1 * gameData.p1Pow +
-    gameData.p2 * gameData.p2Pow +
-    gameData.p3 * gameData.p3Pow +
-    gameData.p4 * gameData.p4Pow +
-    gameData.p5 * gameData.p5Pow +
-    gameData.p6 * gameData.p6Pow +
-    gameData.p7 * gameData.p7Pow +
-    gameData.p8 * gameData.p8Pow +
-    gameData.p9 * gameData.p9Pow
-}
-
-function getSonicBoomSP() {
-  if (gameData.v < mach1Speed) return 0
-  return Math.max(1, Math.floor(((gameData.v - mach1Speed) / mach1Speed)*1.8) + 1)
 }
 
 function roundTo(num, digits) {
@@ -360,66 +560,17 @@ function buyP9Power() {
   }
 }
 
-
-function tick() {
-  const mult = getGenerationMultiplier()
-  gameData.v += ((gameData.vPS * mult) / 100) * gameData.tickspeedX
-  upd()
-}
-
-setInterval(tick, 10)
-
-function sonicBoom() {
-  if (gameData.v >= mach1Speed) {
-    gameData.SP += getSonicBoomSP()
-    gameData.sonicBooms += 1
-    gameData.v = nominal.v
-    gameData.vPCB = nominal.vPCB
-    gameData.vPC = nominal.vPCB * gameData.vPCX
-    gameData.vPC$ = nominal.vPC$
-    gameData.vPS = nominal.vPS
-
-    gameData.p1 = nominal.p1
-    gameData.p2 = nominal.p2
-    gameData.p3 = nominal.p3
-    gameData.p4 = nominal.p4
-    gameData.p5 = nominal.p5
-    gameData.p6 = nominal.p6
-    gameData.p7 = nominal.p7
-    gameData.p8 = nominal.p8
-    gameData.p9 = nominal.p9
-    gameData.p1$ = nominal.p1$
-    gameData.p2$ = nominal.p2$
-    gameData.p3$ = nominal.p3$
-    gameData.p4$ = nominal.p4$
-    gameData.p5$ = nominal.p5$
-    gameData.p6$ = nominal.p6$
-    gameData.p7$ = nominal.p7$
-    gameData.p8$ = nominal.p8$
-    gameData.p9$ = nominal.p9$
-
-    updatePassivePower()
-    upd()
-  }
-}
-
 function setVisible(id, visible) {
   const el = document.getElementById(id)
   if (!el) return
   el.style.display = visible ? "" : "none"
 }
 
-function setButtonDisabled(id, disabled) {
-  const btn = document.getElementById(id)
-  if (!btn) return
-  btn.disabled = disabled
-}
-
 function upd() {
     const nudgeName = getNudgeName()
     document.getElementById("perClickUpgrade").innerHTML = "Strengthen " + nudgeName + ": " + format(gameData.vPC$) + " m/s"
     document.getElementById("nudgePower").innerHTML = "Learn to " + getNudgeName(1) + " for X10 total strength: " + formatW(gameData.nudgePow$) + " SP"
-    document.getElementById("nudgeLvl").innerHTML = nudgeName + " (Power: " + format(gameData.vPC) + ")"
+    document.getElementById("nudgeLvl").innerHTML = nudgeName + " (Power: " + format(effectivevPC) + ")"
     const mach1Progress = (gameData.v / mach1Speed) * 100
     if (mach1Progress < 100) {
         document.getElementById("toMach1").innerHTML = "You are " + format2(mach1Progress) + "% of the way to Mach 1!"
@@ -427,25 +578,29 @@ function upd() {
         document.getElementById("toMach1").innerHTML = "You are " + format2((gameData.v / goalSpeed) * 100) + "% of the way to " + goalName + "!"
     }
     const machRatio = gameData.v / mach1Speed
+    document.getElementById("lsPhotons").innerHTML = "Lightspeed for +" + formatW(getLSPhotons()) + " Photons"
     document.getElementById("speed").innerHTML = "Your ball is rolling at a speed of " + format(gameData.v) + " m/s" + (machRatio >= 1 ? " (Mach " + format3(machRatio) + ")" : "") + "."
-    document.getElementById("boomSP").innerHTML = "Sonic Boom for +" + getSonicBoomSP() + " SP"
-    document.getElementById("heldSP").innerHTML = "You have " + formatW(gameData.SP) + " SP. Use it to double the power of your propellants!"
+    document.getElementById("boomSP").innerHTML = "Sonic Boom for +" + formatW(getSonicBoomSP()) + " SP"
+    document.getElementById("heldSP").innerHTML = "You have " + formatW(gameData.SP) + " SP. Use it to double the power of your boosters!"
+    document.getElementById("heldPhotons").innerHTML = "You have " + formatW(gameData.photons) + " Photons."
     const genMult = getGenerationMultiplier()
     const genMultFixed = genMult.toFixed(3)
     const genEl = document.getElementById("genMult")
     if (genEl) {
       if (genMult < 1) {
         genEl.style.display = ""
-        genEl.innerHTML = "Relativity (Speed past 0.3c) divides production: 1 / " + genMultFixed
+        genEl.innerHTML = "Relativity (Speed past 0.4c) divides production: 1 / " + genMultFixed
       } else {
         genEl.style.display = "none"
       }
     }
     const showBoomButton = gameData.v >= mach1Speed
     const showSPInfo = gameData.sonicBooms > 0
+    const showLightspeed = gameData.lightspeeds > 0
     setVisible("boomSP", showBoomButton)
     setVisible("boomText", showBoomButton)
     setVisible("heldSP", showSPInfo)
+    setVisible("lightspeedTab", showLightspeed)
     setButtonDisabled("perClickUpgrade", gameData.v < gameData.vPC$)
     setButtonDisabled("nudgePower", gameData.SP < gameData.nudgePow$ || gameData.nudgePowCount >= 3)
     setButtonDisabled("p1", gameData.v < gameData.p1$)
@@ -466,41 +621,50 @@ function upd() {
     setButtonDisabled("p9", gameData.v < gameData.p9$)
     setButtonDisabled("p8Power", gameData.SP < gameData.p8Pow$)
     setButtonDisabled("p9Power", gameData.SP < gameData.p9Pow$)
-    document.getElementById("p1Total").innerHTML = formatW(gameData.p1) + " portable fan(s) contributing " + format(gameData.p1 * gameData.p1Pow) + " m/s per second."
-    document.getElementById("p2Total").innerHTML = formatW(gameData.p2) + " RC car(s) contributing " + format(gameData.p2 * gameData.p2Pow) + " m/s per second."
-    document.getElementById("p3Total").innerHTML = formatW(gameData.p3) + " angry chihuahua(s) contributing " + format(gameData.p3 * gameData.p3Pow) + " m/s per second."
-    document.getElementById("p4Total").innerHTML = formatW(gameData.p4) + " pickup truck(s) contributing " + format(gameData.p4 * gameData.p4Pow) + " m/s per second."
-    document.getElementById("p5Total").innerHTML = formatW(gameData.p5) + " trebuchet(s) contributing " + format(gameData.p5 * gameData.p5Pow) + " m/s per second."
-    document.getElementById("p6Total").innerHTML = formatW(gameData.p6) + " jet engine(s) contributing " + format(gameData.p6 * gameData.p6Pow) + " m/s per second."
-    document.getElementById("p7Total").innerHTML = formatW(gameData.p7) + " antimatter drive(s) contributing " + format(gameData.p7 * gameData.p7Pow) + " m/s per second."
-    document.getElementById("p1").innerHTML = "Portable Fan: " + format(gameData.p1$) + " m/s"
-    document.getElementById("p1Income").innerHTML = "(Gives +" + format(gameData.p1Pow) + " m/s per second)"
+    document.getElementById("p1Name").innerHTML = "Portable Fan (" + formatW(gameData.p1) + ")"
+    document.getElementById("p2Name").innerHTML = "RC Car (" + formatW(gameData.p2) + ")"
+    document.getElementById("p3Name").innerHTML = "Angry Chihuahua (" + formatW(gameData.p3) + ")"
+    document.getElementById("p4Name").innerHTML = "Pickup Truck (" + formatW(gameData.p4) + ")"
+    document.getElementById("p5Name").innerHTML = "Trebuchet (" + formatW(gameData.p5) + ")"
+    document.getElementById("p6Name").innerHTML = "Jet Engine (" + formatW(gameData.p6) + ")"
+    document.getElementById("p7Name").innerHTML = "Antimatter Drive (" + formatW(gameData.p7) + ")"
+    document.getElementById("p8Name").innerHTML = "Gravity Assist (" + formatW(gameData.p8) + ")"
+    document.getElementById("p9Name").innerHTML = "Divine Wind (" + formatW(gameData.p9) + ")"
+    document.getElementById("p1Total").innerHTML = "Total: " + format(gameData.p1 * p1EffectivePow) + " m/s per second"
+    document.getElementById("p2Total").innerHTML = "Total: " + format(gameData.p2 * p2EffectivePow) + " m/s per second"
+    document.getElementById("p3Total").innerHTML = "Total: " + format(gameData.p3 * p3EffectivePow) + " m/s per second"
+    document.getElementById("p4Total").innerHTML = "Total: " + format(gameData.p4 * p4EffectivePow) + " m/s per second"
+    document.getElementById("p5Total").innerHTML = "Total: " + format(gameData.p5 * p5EffectivePow) + " m/s per second"
+    document.getElementById("p6Total").innerHTML = "Total: " + format(gameData.p6 * p6EffectivePow) + " m/s per second"
+    document.getElementById("p7Total").innerHTML = "Total: " + format(gameData.p7 * p7EffectivePow) + " m/s per second"
+    document.getElementById("p8Total").innerHTML = "Total: " + format(gameData.p8 * p8EffectivePow) + " m/s per second"
+    document.getElementById("p9Total").innerHTML = "Total: " + format(gameData.p9 * p9EffectivePow) + " m/s per second"
+    document.getElementById("p1").innerHTML = "Buy for " + format(gameData.p1$) + " m/s"
+    document.getElementById("p1Income").innerHTML = "Income: " + format(p1EffectivePow)
     document.getElementById("p1Power").innerHTML = "Add another fan blade: " + formatW(gameData.p1Pow$) + " SP"
-    document.getElementById("p2").innerHTML = "RC Car: " + format(gameData.p2$) + " m/s"
-    document.getElementById("p2Income").innerHTML = "(Gives +" + format(gameData.p2Pow) + " m/s per second)"
-    document.getElementById("p2Power").innerHTML = "Apply more voltage: " + formatW(gameData.p2Pow$) + " SP"
-    document.getElementById("p3").innerHTML = "Angry Chihuahua: " + format(gameData.p3$) + " m/s"
-    document.getElementById("p3Income").innerHTML = "(Gives +" + format(gameData.p3Pow) + " m/s per second)"
+    document.getElementById("p2").innerHTML = "Buy for " + format(gameData.p2$) + " m/s"
+    document.getElementById("p2Income").innerHTML = "Income: " + format(p2EffectivePow)
+    document.getElementById("p2Power").innerHTML = "Increase motor voltage: " + formatW(gameData.p2Pow$) + " SP"
+    document.getElementById("p3").innerHTML = "Buy for " + format(gameData.p3$) + " m/s"
+    document.getElementById("p3Income").innerHTML = "Income: " + format(p3EffectivePow)
     document.getElementById("p3Power").innerHTML = "Make chihuahuas angrier: " + formatW(gameData.p3Pow$) + " SP"
-    document.getElementById("p4").innerHTML = "Pickup Truck: " + format(gameData.p4$) + " m/s"
-    document.getElementById("p4Income").innerHTML = "(Gives +" + format(gameData.p4Pow) + " m/s per second)"
+    document.getElementById("p4").innerHTML = "Buy for " + format(gameData.p4$) + " m/s"
+    document.getElementById("p4Income").innerHTML = "Income: " + format(p4EffectivePow)
     document.getElementById("p4Power").innerHTML = "Decrease fuel prices: " + formatW(gameData.p4Pow$) + " SP"
-    document.getElementById("p5").innerHTML = "Trebuchet: " + format(gameData.p5$) + " m/s"
-    document.getElementById("p5Income").innerHTML = "(Gives +" + format(gameData.p5Pow) + " m/s per second)"
+    document.getElementById("p5").innerHTML = "Buy for " + format(gameData.p5$) + " m/s"
+    document.getElementById("p5Income").innerHTML = "Income: " + format(p5EffectivePow)
     document.getElementById("p5Power").innerHTML = "Add more counterweights: " + formatW(gameData.p5Pow$) + " SP"
-    document.getElementById("p6").innerHTML = "Jet Engine: " + format(gameData.p6$) + " m/s"
-    document.getElementById("p6Income").innerHTML = "(Gives +" + format(gameData.p6Pow) + " m/s per second)"
-    document.getElementById("p6Power").innerHTML = "Make jet engine louder: " + formatW(gameData.p6Pow$) + " SP"
-    document.getElementById("p7").innerHTML = "Antimatter Drive: " + format(gameData.p7$) + " m/s"
-    document.getElementById("p7Income").innerHTML = "(Gives +" + format(gameData.p7Pow) + " m/s per second)"
+    document.getElementById("p6").innerHTML = "Buy for " + format(gameData.p6$) + " m/s"
+    document.getElementById("p6Income").innerHTML = "Income: " + format(p6EffectivePow)
+    document.getElementById("p6Power").innerHTML = "Make jet engines louder: " + formatW(gameData.p6Pow$) + " SP"
+    document.getElementById("p7").innerHTML = "Buy for " + format(gameData.p7$) + " m/s"
+    document.getElementById("p7Income").innerHTML = "Income: " + format(p7EffectivePow)
     document.getElementById("p7Power").innerHTML = "Supply more positrons: " + formatW(gameData.p7Pow$) + " SP"
-    document.getElementById("p8Total").innerHTML = formatW(gameData.p8) + " gravity assist(s) contributing " + format(gameData.p8 * gameData.p8Pow) + " m/s per second."
-    document.getElementById("p8").innerHTML = "Gravity Assist: " + format(gameData.p8$) + " m/s"
-    document.getElementById("p8Income").innerHTML = "(Gives +" + format(gameData.p8Pow) + " m/s per second)"
-    document.getElementById("p8Power").innerHTML = "Redefine law of energy conservation: " + formatW(gameData.p8Pow$) + " SP"
-    document.getElementById("p9Total").innerHTML = formatW(gameData.p9) + " divine wind(s) contributing " + format(gameData.p9 * gameData.p9Pow) + " m/s per second."
-    document.getElementById("p9").innerHTML = "Divine Wind: " + format(gameData.p9$) + " m/s"
-    document.getElementById("p9Income").innerHTML = "(Gives +" + format(gameData.p9Pow) + " m/s per second)"
+    document.getElementById("p8").innerHTML = "Buy for " + format(gameData.p8$) + " m/s"
+    document.getElementById("p8Income").innerHTML = "Income: " + format(p8EffectivePow)
+    document.getElementById("p8Power").innerHTML = "Redefine energy conservation: " + formatW(gameData.p8Pow$) + " SP"
+    document.getElementById("p9").innerHTML = "Buy for " + format(gameData.p9$) + " m/s"
+    document.getElementById("p9Income").innerHTML = "Income: " + format(p9EffectivePow)
     document.getElementById("p9Power").innerHTML = "Recite holy scriptures: " + formatW(gameData.p9Pow$) + " SP"
 
     const showSPUpgrades = gameData.sonicBooms > 0
@@ -516,10 +680,7 @@ function upd() {
     setVisible("p2Power", gameData.p2Unlocked && showSPUpgrades)
     setVisible("p2Text", gameData.p2Unlocked)
     setVisible("p3Row", gameData.p3Unlocked)
-    setVisible("p3", gameData.p3Unlocked)
-    setVisible("p3Total", gameData.p3Unlocked)
     setVisible("p3Power", gameData.p3Unlocked && showSPUpgrades)
-    setVisible("p3Text", gameData.p3Unlocked)
     setVisible("p4Row", gameData.p4Unlocked)
     setVisible("p4", gameData.p4Unlocked)
     setVisible("p4Total", gameData.p4Unlocked)
@@ -584,8 +745,8 @@ function format3(num) {
 function formatW(num) {
   if (num === 0) return "0"
   const absNum = Math.abs(num)
-  if (absNum >= 1e6) {
-    return num.toExponential(0)
+  if (absNum >= 1e9) {
+    return num.toExponential(3)
   }
   return num.toLocaleString("en-US", {
     minimumFractionDigits: 0,
